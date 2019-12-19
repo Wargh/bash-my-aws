@@ -89,7 +89,8 @@ kms-decrypt
 kms-encrypt
 kms-key-create
 kms-key-details
-kms-key-schedule-deletion
+kms-key-disable
+kms-key-enable
 kms-keys
 lambda-function-memory
 lambda-function-memory-set
