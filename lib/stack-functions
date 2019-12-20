@@ -34,11 +34,24 @@
 # And don't forget, these naming conventions are completely optional.
 ##
 
-# List CF stacks
-#
-# To make it fly we omit stacks with status of DELETE_COMPLETE
-# Output sorted by CreationTime
 stacks() {
+
+  # List CloudFormation stacks.
+  #
+  # To make it fly we omit stacks with status of DELETE_COMPLETE
+  # Output is sorted by CreationTime
+  #
+  #     $ stacks
+  #     nagios          CREATE_COMPLETE  2018-03-12T11:41:31Z  NEVER_UPDATED  NOT_NESTED
+  #     postgres1       CREATE_COMPLETE  2019-04-14T15:22:44Z  NEVER_UPDATED  NOT_NESTED
+  #     postgres2       CREATE_COMPLETE  2019-05-18T05:45:50Z  NEVER_UPDATED  NOT_NESTED
+  #     prometheus-web  CREATE_COMPLETE  2019-11-23T15:57:04Z  NEVER_UPDATED  NOT_NESTED
+  #
+  # *Provide a filter string for a `| grep` effect with tighter columisation:*
+  #
+  #     $ stacks postgres
+  #     postgres1  CREATE_COMPLETE  2019-04-14T15:22:44Z  NEVER_UPDATED  NOT_NESTED
+  #     postgres2  CREATE_COMPLETE  2019-05-18T05:45:50Z  NEVER_UPDATED  NOT_NESTED
 
   local filters=$(__bma_read_filters $@) # Filter output by arguments (optional)
   local stack_names=$(__bma_read_inputs) # Filter by stack-names from STDIN (optional)
@@ -73,7 +86,24 @@ stacks() {
   column -s$'\t' -t
 }
 
+
 stack-arn() {
+
+  # Returns ARN(s) for stacks.
+  #
+  #     USAGE: stack-arn stack [stack]
+  #
+  #     $ stack-arn prometheus-web
+  #     arn:aws:cloudformation:us-east-1:000000000000:stack/prometheus-web/805e081c-b8eb-4f6c-9872-2b5cddc77fba
+  #
+  # *Supports multiple stack names from STDIN*:
+  #
+  #     $ stacks | stack-arn
+  #     arn:aws:cloudformation:us-east-1:000000000000:stack/nagios/c0f0ef04-b505-4c0c-87cd-ca924153ad1c
+  #     arn:aws:cloudformation:us-east-1:000000000000:stack/postgres1/758b0ba2-60f2-4432-8935-f79f47708f23
+  #     arn:aws:cloudformation:us-east-1:000000000000:stack/postgres2/7420bbd4-3026-444f-b55b-fa0a9d564730
+  #     arn:aws:cloudformation:us-east-1:000000000000:stack/prometheus-web/805e081c-b8eb-4f6c-9872-2b5cddc77fba
+
   local stacks=$(__bma_read_inputs $@)
   [[ -z ${stacks} ]] && __bma_usage "stack [stack]" && return 1
   local stack
@@ -202,7 +232,7 @@ stack-recreate() {
   local capabilities_value=$(_bma_stack_capabilities $stack)
   [[ -z "${capabilities_value}" ]] || capabilities="--capabilities=${capabilities_value}"
 
-  local tmpdir=`mktemp -d /tmp/bash-my-aws.XXXX`
+  local tmpdir=`mktemp -d /tmp/bash-my-aws.XXXXXXXX`
   cd $tmpdir
   stack-template $stack > "${stack}.template"
   stack-parameters $stack > "${stack}-params.json"
@@ -211,7 +241,7 @@ stack-recreate() {
               "${stack}.template" \
               "${stack}-params.json" \
               $capabilities
-  #rm -fr $tmpdir
+  rm -fr $tmpdir
 }
 
 stack-failure() {
@@ -234,29 +264,46 @@ stack-failure() {
 }
 
 stack-events() {
-  # type: detail
-  # return the events a stack has experienced
+
+  # List event history for a single Stack
+  #
+  #     USAGE: stack-events stack
+
   local inputs=$(__bma_read_inputs $@)
   local stack=$(_bma_stack_name_arg ${inputs})
   [[ -z ${stack} ]] && __bma_usage "stack" && return 1
 
   if output=$(aws cloudformation describe-stack-events \
-    --stack-name ${stack}                  \
+    --stack-name "$stack"                  \
+    --output table                         \
     --query "
       sort_by(StackEvents, &Timestamp)[].[
         Timestamp,
         LogicalResourceId,
         ResourceType,
         ResourceStatus
-      ]"                                   \
-    --output table); then
+      ]"
+  ); then
     echo "$output" | uniq -u
   else
     return $?
   fi
 }
 
+
 stack-resources() {
+
+  # List all resources in Stack(s)
+  #
+  #     USAGE: stack-resources stack [stack]
+  #
+  #     $ stacks | stack-resources
+  #     i-7d54924538baa7a1f  AWS::EC2::Instance  ec2
+  #     i-c54279c6055c3c794  AWS::EC2::Instance  nagios
+  #     i-a8b8dd6783e1a40cc  AWS::EC2::Instance  postgres1
+  #     i-5d74753e210bfe04d  AWS::EC2::Instance  postgres2
+  #     i-2aa95cc214a461398  AWS::EC2::Instance  prometheus-web
+
 
   local stacks=$(__bma_read_inputs $@)
   [[ -z ${stacks} ]] && __bma_usage "stack [stack]" && return 1
@@ -279,8 +326,14 @@ stack-resources() {
 
 
 stack-asgs() {
-  # type: detail
-  # return the autoscaling groups managed by a stack
+
+  # List ASGs in Stack(s)
+  #
+  #     USAGE: stack-asgs stack [stack]
+  #
+  #     $ stacks | stack-asgs
+  #     asg-bash-my-aws-AutoScalingGroup-MSBCWRTI3PVM  AWS::AutoScaling::AutoScalingGroup  asg-bash-my-aws
+  #     asg2-AutoScalingGroup-1FHUVUJ7SLPU7            AWS::AutoScaling::AutoScalingGroup  asg2
 
   local stacks=$(__bma_read_inputs $@)
   [[ -z ${stacks} ]] && __bma_usage "stack [stack]" && return 1
@@ -293,6 +346,14 @@ stack-asgs() {
 
 stack-asg-instances() {
 
+  # List EC2 Instances of EC2 Autoscaling Groups in Stack(s)
+  #
+  #     USAGE: stack-asg-instances stack [stack]
+  #
+  #     $ stacks | stack-asg-instances
+  #     i-06ee900565652ecc5  ami-0119aa4d67e59007c  t3.nano  running  asg-bash-my-aws  2019-12-13T03:15:22.000Z  ap-southeast-2c  vpc-deb8edb9
+  #     i-01c7edb986c18c16a  ami-0119aa4d67e59007c  t3.nano  running  asg2             2019-12-13T03:37:51.000Z  ap-southeast-2c  vpc-deb8edb9
+
   local stacks=$(__bma_read_inputs $@)
   [[ -z ${stacks} ]] && __bma_usage "stack [stack]" && return 1
 
@@ -304,7 +365,14 @@ stack-asg-instances() {
 
 
 stack-elbs() {
-  # return the elastic load balancers managed by stack(s)
+
+  # List EC2 Elastic Load Balancers in Stack(s)
+  #
+  #  USAGE: stack-elbs stack [stack]
+  #
+  #     $ stacks | stack-elbs
+  #     elb-MyLoadBalancer-NA5S72MLA5KI   AWS::ElasticLoadBalancing::LoadBalancer  elb-stack-1
+  #     load-bala-MyLoadBa-11HZ0DHUHJZZI  AWS::ElasticLoadBalancing::LoadBalancer  elb-stack-2
 
   local stacks=$(__bma_read_inputs $@)
   [[ -z ${stacks} ]] && __bma_usage "stack [stack]" && return 1
@@ -314,14 +382,27 @@ stack-elbs() {
   column -t
 }
 
+
 stack-instances() {
-  # return the instances managed by stack(s)
+
+  # List instances in stack(s)
+  #
+  #     USAGE: stack-instances stack [stack]
+  #
+  #     $ stacks | stack-instances
+  #     i-7d54924538baa7a1f  ami-123456789012  t3.nano  stopped  ec2             2019-12-11T09:31:03.000Z  ap-southeast-2a  None
+  #     i-c54279c6055c3c794  ami-123456789012  t3.nano  running  nagios          2019-12-13T02:24:30.000Z  ap-southeast-2a  None
+  #     i-a8b8dd6783e1a40cc  ami-123456789012  t3.nano  running  postgres1       2019-12-13T02:24:32.000Z  ap-southeast-2a  None
+  #     i-5d74753e210bfe04d  ami-123456789012  t3.nano  running  postgres2       2019-12-13T02:24:34.000Z  ap-southeast-2a  None
+  #     i-2aa95cc214a461398  ami-123456789012  t3.nano  running  prometheus-web  2019-12-13T02:24:36.000Z  ap-southeast-2a  None
+
   local stacks=$(__bma_read_inputs $@)
   [[ -z ${stacks} ]] && __bma_usage "stack [stack]" && return 1
 
   local instance_ids=$(stack-resources $stacks | grep AWS::EC2::Instance | awk '{ print $1 }')
   [[ -n "$instance_ids" ]] && instances $instance_ids
 }
+
 
 stack-parameters() {
   # return the parameters applied to a stack

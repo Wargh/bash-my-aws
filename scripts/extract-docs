@@ -6,12 +6,18 @@
 
 for x in $@; do
 
+  echo
+  echo
   basename "$x" | sed -E 's/(.*)-functions/## \1-commands/g'
 
-  cat "$x"                           |
-  grep '()\|^  #'                    |
-  sed -E 's/\(\) ?\{//g'             |
-  sed -E 's/^([^ ]+)/\n\n### \1\n/g' |
-  sed -E 's/  #( )?//g'
+  cat "$x"                            |
+  grep    '(){\|() {\|^  #'           |
+  grep -v 'shellcheck\|TODO\|XXX'     |
+  grep -v '_bma'                      |
+  sed -E  's/\(\) ?\{//g'             |
+  sed -E  's/^([^ ]+)/\n\n### \1\n/g' |
+  sed -E  's/^  #( )?//g'
 
 done
+
+#  grep    '()\|^  #'                  |

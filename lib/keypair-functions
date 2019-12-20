@@ -31,10 +31,12 @@ keypair-create() {
   #
   # Provides benefits over AWS creating the keypair:
   #
-  # - Amazon never has access to private key
-  # - Private key is protected with passphrase before being written to disk
-  # - Keys is written to ~/.ssh with correct file permissions
-  # - You control the SSH Key type (algorithm, length, etc)
+  # Amazon never has access to private key.  
+  # Private key is protected with passphrase before being written to disk.  
+  # Keys is written to ~/.ssh with correct file permissions.  
+  # You control the SSH Key type (algorithm, length, etc).  
+  #
+  #     USAGE: keypair-delete key_name [key_name]
   #
   #     $ keypair-create yet-another-keypair
   #     Creating /home/m/.ssh/yet-another-keypair
@@ -85,6 +87,8 @@ keypair-create() {
 keypair-delete() {
 
   # Delete EC2 SSH Keypairs by providing their names as arguments or via STDIN
+  #
+  #     USAGE: keypair-delete key_name [key_name]
   #
   #     $ keypair-delete alice bob
   #     You are about to delete the following EC2 SSH KeyPairs:
