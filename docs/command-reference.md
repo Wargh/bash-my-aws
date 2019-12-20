@@ -1,3 +1,12 @@
+The project provides over 120 commands but fear not, much has been done
+to make them *discoverable*, *memorable* and hopefully in many cases *obvious*.
+
+The reference material below is all extracted from the source of the commands.
+While not necessary to use the commands. Be curious. Read the source. :-)
+
+Lists in this project are alphabetised except where it makes sense not to.
+The first few sets of commands were chosen because they are likely to be of
+the most interest to readers.
 
 !!! Note "General Rules"
     - Commands expect `$AWS_DEFAULT_REGION` environment variable to be set
@@ -10,10 +19,9 @@
     - Resources are generally listed in chronological order of creation.
 
 
+
 ## aws-account-commands
 
-These functions target AWS Accounts and act on either the account you're
-authenticated to or the Account IDs provided to them.
 
 ### aws-account-alias
 
@@ -22,12 +30,39 @@ Retrieve AWS Account Alias for current account
     $ aws-account-alias
     example-account-prod
 
+
 ### aws-account-id
 
 Retrieve AWS Account ID for current account
 
     $ aws-account-id
     012345678901
+
+
+### aws-account-each
+
+Run a script/command across a number of AWS Accounts
+
+    USAGE: aws-account-each cmd # pipe in AWS_ACCOUNT_IDS
+
+    $ grep non_prod AWS_ACCOUNTS | aws-account-each stacks FAILED
+
+    # account=012345678901 alias=example-account-prod
+    example-stack1-prod  CREATED_FAILED
+    example-stack2-prod  UPDATE_ROLLBACK_FAILED
+    # account=123456789012 alias=example-account-staging
+    example-stack1-staging  CREATED_FAILED
+    example-stack2-staging  UPDATE_ROLLBACK_FAILED
+
+!!! Note
+    In order to use `aws-account-each`, you need to be authenticated with an
+    IAM Role that can assume a Role in each of the specified accounts.
+    Check the source for more info.
+
+
+### aws-panopticon
+
+aws-panopticon was previous name for aws-account-each()
 
 
 ### aws-account-cost-explorer
@@ -48,30 +83,16 @@ in Cost Recommendations.
     #=> Opens web browser to AWS Cost Recommendations with accounts selected
 
 
-### aws-account-each
-
-Run a script/command across a number of AWS Accounts
-
-    $ grep non_prod AWS_ACCOUNTS | aws-account-each stacks FAILED
-
-    # account=012345678901 alias=example-account-prod
-    example-stack1-prod  CREATED_FAILED
-    example-stack2-prod  UPDATE_ROLLBACK_FAILED
-    # account=123456789012 alias=example-account-staging
-    example-stack1-staging  CREATED_FAILED
-    example-stack2-staging  UPDATE_ROLLBACK_FAILED
-
-!!! Note
-    In order to use `aws-account-each`, you need to be authenticated with an
-    IAM Role that can assume a Role in each of the specified accounts.
-    Check the source for more info.
-
-
 ## region-commands
+
 
 ### regions
 
 List regions
+
+The region() function must be sourced in order to update the
+AWS_DEFAULT_REGION environment variable. This is because it
+cannot update an environment variable when run as a subprocess.
 
     $ regions
     ap-northeast-1
@@ -79,16 +100,7 @@ List regions
     ap-south-1
     ap-southeast-1
     ap-southeast-2
-    ca-central-1
-    cn-north-1
-    eu-central-1
-    eu-west-1
-    eu-west-2
-    sa-east-1
-    us-east-1
-    us-east-2
-    us-gov-west-1
-    us-west-1
+    ...
     us-west-2
 
 
@@ -113,30 +125,19 @@ Any output lines will be appended with "#${REGION}".
     $ region-each stacks | column -t
     example-ec2-ap-northeast-1  CREATE_COMPLETE  2011-05-23T15:47:44Z  NEVER_UPDATED  NOT_NESTED  #ap-northeast-1
     example-ec2-ap-northeast-2  CREATE_COMPLETE  2011-05-23T15:47:44Z  NEVER_UPDATED  NOT_NESTED  #ap-northeast-2
-    example-ec2-ap-south-1      CREATE_COMPLETE  2011-05-23T15:47:44Z  NEVER_UPDATED  NOT_NESTED  #ap-south-1
-    example-ec2-ap-southeast-1  CREATE_COMPLETE  2011-05-23T15:47:44Z  NEVER_UPDATED  NOT_NESTED  #ap-southeast-1
-    example-ec2-ap-southeast-2  CREATE_COMPLETE  2011-05-23T15:47:44Z  NEVER_UPDATED  NOT_NESTED  #ap-southeast-2
-    example-ec2-ca-central-1    CREATE_COMPLETE  2011-05-23T15:47:44Z  NEVER_UPDATED  NOT_NESTED  #ca-central-1
-    example-ec2-eu-central-1    CREATE_COMPLETE  2011-05-23T15:47:44Z  NEVER_UPDATED  NOT_NESTED  #eu-central-1
-    example-ec2-eu-west-1       CREATE_COMPLETE  2011-05-23T15:47:44Z  NEVER_UPDATED  NOT_NESTED  #eu-west-1
-    example-ec2-eu-west-2       CREATE_COMPLETE  2011-05-23T15:47:44Z  NEVER_UPDATED  NOT_NESTED  #eu-west-2
-    example-ec2-sa-east-1       CREATE_COMPLETE  2011-05-23T15:47:44Z  NEVER_UPDATED  NOT_NESTED  #sa-east-1
-    example-ec2-us-east-1       CREATE_COMPLETE  2011-05-23T15:47:44Z  NEVER_UPDATED  NOT_NESTED  #us-east-1
-    example-ec2-us-east-2       CREATE_COMPLETE  2011-05-23T15:47:44Z  NEVER_UPDATED  NOT_NESTED  #us-east-2
-    example-ec2-us-west-1       CREATE_COMPLETE  2011-05-23T15:47:44Z  NEVER_UPDATED  NOT_NESTED  #us-west-1
+    ...
     example-ec2-us-west-2       CREATE_COMPLETE  2011-05-23T15:47:44Z  NEVER_UPDATED  NOT_NESTED  #us-west-2
 
 
 ## stack-commands
 
-Act on CloudFormation stacks.
-
-This was where `bash-my-aws` started back in 2014. A few of these functions
-do not yet accept multiple stacks as piped input.
 
 ### stacks
 
 List CloudFormation stacks.
+
+To make it fly we omit stacks with status of DELETE_COMPLETE
+Output is sorted by CreationTime
 
     $ stacks
     nagios          CREATE_COMPLETE  2018-03-12T11:41:31Z  NEVER_UPDATED  NOT_NESTED
@@ -153,9 +154,9 @@ List CloudFormation stacks.
 
 ### stack-arn
 
-`USAGE: stack-arn stack [stack]`
-
 Returns ARN(s) for stacks.
+
+    USAGE: stack-arn stack [stack]
 
     $ stack-arn prometheus-web
     arn:aws:cloudformation:us-east-1:000000000000:stack/prometheus-web/805e081c-b8eb-4f6c-9872-2b5cddc77fba
@@ -169,64 +170,50 @@ Returns ARN(s) for stacks.
     arn:aws:cloudformation:us-east-1:000000000000:stack/prometheus-web/805e081c-b8eb-4f6c-9872-2b5cddc77fba
 
 
-### stack-asg-instances
-
-`USAGE: stack-asg-instances stack [stack]`
-
-    $ stacks | stack-asg-instances
-    i-06ee900565652ecc5  ami-0119aa4d67e59007c  t3.nano  running  asg-bash-my-aws  2019-12-13T03:15:22.000Z  ap-southeast-2c  vpc-deb8edb9
-    i-01c7edb986c18c16a  ami-0119aa4d67e59007c  t3.nano  running  asg2             2019-12-13T03:37:51.000Z  ap-southeast-2c  vpc-deb8edb9
-
-
-### stack-asgs
-
-`USAGE: stack-asgs stack [stack]`
-
-    $ stacks | stack-asgs
-    asg-bash-my-aws-AutoScalingGroup-MSBCWRTI3PVM  AWS::AutoScaling::AutoScalingGroup  asg-bash-my-aws
-    asg2-AutoScalingGroup-1FHUVUJ7SLPU7            AWS::AutoScaling::AutoScalingGroup  asg2
-
-
 ### stack-cancel-update
+
+
+
 ### stack-create
+
+
+
+### stack-update
+
+
+
 ### stack-delete
-### stack-diff
+
+delete an existing stack
 
 
-### stack-elbs
+### stack-exports
 
-`USAGE: stack-elbs stack [stack]`
 
-    $ stacks | stack-elbs
-    elb-MyLoadBalancer-NA5S72MLA5KI   AWS::ElasticLoadBalancing::LoadBalancer  elb-stack-1
-    load-bala-MyLoadBa-11HZ0DHUHJZZI  AWS::ElasticLoadBalancing::LoadBalancer  elb-stack-2
+
+### stack-recreate
+
+
+
+### stack-failure
+
+type: detail
+return the reason a stack failed to update/create/delete
+FIXME: only grab the latest failure
 
 
 ### stack-events
-### stack-exports
-### stack-failure
 
+List event history for a single Stack
 
-### stack-instances
-
-`USAGE: stack-instances stack [stack]`
-
-    $ stacks | stack-instances
-    i-7d54924538baa7a1f  ami-123456789012  t3.nano  stopped  ec2             2019-12-11T09:31:03.000Z  ap-southeast-2a  None
-    i-c54279c6055c3c794  ami-123456789012  t3.nano  running  nagios          2019-12-13T02:24:30.000Z  ap-southeast-2a  None
-    i-a8b8dd6783e1a40cc  ami-123456789012  t3.nano  running  postgres1      2019-12-13T02:24:32.000Z  ap-southeast-2a  None
-    i-5d74753e210bfe04d  ami-123456789012  t3.nano  running  postgres2      2019-12-13T02:24:34.000Z  ap-southeast-2a  None
-    i-2aa95cc214a461398  ami-123456789012  t3.nano  running  prometheus-web  2019-12-13T02:24:36.000Z  ap-southeast-2a  None
-
-
-### stack-outputs
-### stack-parameters
-### stack-recreate
+    USAGE: stack-events stack
 
 
 ### stack-resources
 
-`USAGE: stack-resources stack [stack]`
+List all resources in Stack(s)
+
+    USAGE: stack-resources stack [stack]
 
     $ stacks | stack-resources
     i-7d54924538baa7a1f  AWS::EC2::Instance  ec2
@@ -236,32 +223,139 @@ Returns ARN(s) for stacks.
     i-2aa95cc214a461398  AWS::EC2::Instance  prometheus-web
 
 
+### stack-asgs
+
+List ASGs in Stack(s)
+
+    USAGE: stack-asgs stack [stack]
+
+    $ stacks | stack-asgs
+    asg-bash-my-aws-AutoScalingGroup-MSBCWRTI3PVM  AWS::AutoScaling::AutoScalingGroup  asg-bash-my-aws
+    asg2-AutoScalingGroup-1FHUVUJ7SLPU7            AWS::AutoScaling::AutoScalingGroup  asg2
+
+
+### stack-asg-instances
+
+List EC2 Instances of EC2 Autoscaling Groups in Stack(s)
+
+    USAGE: stack-asg-instances stack [stack]
+
+    $ stacks | stack-asg-instances
+    i-06ee900565652ecc5  ami-0119aa4d67e59007c  t3.nano  running  asg-bash-my-aws  2019-12-13T03:15:22.000Z  ap-southeast-2c  vpc-deb8edb9
+    i-01c7edb986c18c16a  ami-0119aa4d67e59007c  t3.nano  running  asg2             2019-12-13T03:37:51.000Z  ap-southeast-2c  vpc-deb8edb9
+
+
+### stack-elbs
+
+List EC2 Elastic Load Balancers in Stack(s)
+
+ USAGE: stack-elbs stack [stack]
+
+    $ stacks | stack-elbs
+    elb-MyLoadBalancer-NA5S72MLA5KI   AWS::ElasticLoadBalancing::LoadBalancer  elb-stack-1
+    load-bala-MyLoadBa-11HZ0DHUHJZZI  AWS::ElasticLoadBalancing::LoadBalancer  elb-stack-2
+
+
+### stack-instances
+
+List instances in stack(s)
+
+    USAGE: stack-instances stack [stack]
+
+    $ stacks | stack-instances
+    i-7d54924538baa7a1f  ami-123456789012  t3.nano  stopped  ec2             2019-12-11T09:31:03.000Z  ap-southeast-2a  None
+    i-c54279c6055c3c794  ami-123456789012  t3.nano  running  nagios          2019-12-13T02:24:30.000Z  ap-southeast-2a  None
+    i-a8b8dd6783e1a40cc  ami-123456789012  t3.nano  running  postgres1       2019-12-13T02:24:32.000Z  ap-southeast-2a  None
+    i-5d74753e210bfe04d  ami-123456789012  t3.nano  running  postgres2       2019-12-13T02:24:34.000Z  ap-southeast-2a  None
+    i-2aa95cc214a461398  ami-123456789012  t3.nano  running  prometheus-web  2019-12-13T02:24:36.000Z  ap-southeast-2a  None
+
+
+### stack-parameters
+
+return the parameters applied to a stack
+
+
 ### stack-status
+
+type: detail
+return the current status of a stack
+
+
 ### stack-tag
+
+return a selected stack tag
+
+
 ### stack-tag-apply
+
+apply a stack tag
+
+
 ### stack-tag-delete
-### stack-tags
-### stack-tags-text
+
+delete a stack tag
+
+
 ### stack-tail
+
+type: detail
+follow the events occuring for a stack
+
+
 ### stack-template
-### stack-update
+
+return the template applied to a stack
+
+
+### stack-tags
+
+return the stack-tags applied to a stack
+
+
+### stack-tags-text
+
+return all stack tags on a single line
+
+
+### stack-outputs
+
+type: detail
+return the outputs of a stack
+
+
 ### stack-validate
+
+type: detail
+validate a stack template
+
+
+### stack-diff
+
+type: detail
+return differences between a template and Stack
+report changes which would be made to stack if template were applied
+report on what changes would be made to stack by applying params
+If we are working from a single argument (ignore args starting with `--`)
+Strip path and extension from template
+Deduce params filename from stack and template names
+Strip path and extension from template
+File extension gets stripped off if template name provided as stack name
+Determine name of template to use
+determine name of params file to use
+determine what (if any) capabilities a given stack was deployed with
 
 
 ## instance-commands
 
-These commands work with EC2 Instances. While the USAGE line describes command
-line arguments, the examples tend to use STDIN to pass resource IDs because
-it's more common usage.
 
 ### instances
 
-Lists EC2 instances
+List EC2 Instances
 
     $ instances
     i-4e15ece1de1a3f869  ami-123456789012  t3.nano  running  nagios          2019-12-10T08:17:18.000Z  ap-southeast-2a  None
-    i-89cefa9403373d7a5  ami-123456789012  t3.nano  running  postgres1      2019-12-10T08:17:20.000Z  ap-southeast-2a  None
-    i-806d8f1592e2a2efd  ami-123456789012  t3.nano  running  postgres2      2019-12-10T08:17:22.000Z  ap-southeast-2a  None
+    i-89cefa9403373d7a5  ami-123456789012  t3.nano  running  postgres1       2019-12-10T08:17:20.000Z  ap-southeast-2a  None
+    i-806d8f1592e2a2efd  ami-123456789012  t3.nano  running  postgres2       2019-12-10T08:17:22.000Z  ap-southeast-2a  None
     i-61e86ac6be1e2c193  ami-123456789012  t3.nano  running  prometheus-web  2019-12-10T08:17:24.000Z  ap-southeast-2a  None
 
 *Optionally provide a filter string for a `| grep` effect with tighter columisation:*
@@ -270,68 +364,75 @@ Lists EC2 instances
     i-89cefa9403373d7a5  ami-123456789012  t3.nano  running  postgres1  2019-12-10T08:17:20.000Z  ap-southeast-2a  None
     i-806d8f1592e2a2efd  ami-123456789012  t3.nano  running  postgres2  2019-12-10T08:17:22.000Z  ap-southeast-2a  None
 
+
 ### instance-asg
+
+List autoscaling group membership of EC2 Instance(s)
+
+    USAGE: instance-asg instance-id [instance-id]
+
 
 ### instance-az
 
-List Availability Zone(s) for EC2 Instance(s)
+List availability zone of EC2 Instance(s)
 
-`USAGE: instance-az instance-id [instance-id]`
+    USAGE: instance-az instance-id [instance-id]
 
     $ instances postgres | instance-az
     i-89cefa9403373d7a5  ap-southeast-2a
     i-806d8f1592e2a2efd  ap-southeast-2a
 
+
 ### instance-console
 
-`USAGE: instance-console instance-id [instance-id]`
+List console output of EC2 Instance(s)
+
+    USAGE: instance-console instance-id [instance-id]
 
     $ instances postgres | instance-console
     Console output for EC2 Instance i-89cefa9403373d7a5
     Linux version 2.6.16-xenU (builder@patchbat.amazonsa) (gcc version 4.0.1 20050727 (Red Hat 4.0.1-5)) #1 SMP Thu Oct 26 08:41:26 SAST 2006
     BIOS-provided physical RAM map:
     Xen: 0000000000000000 - 000000006a400000 (usable)
-    980MB HIGHMEM available.
-    727MB LOWMEM available.
-    NX (Execute Disable) protection: active
-    IRQ lockup detection disabled
-    Built 1 zonelists
-    Kernel command line: root=/dev/sda1 ro 4
-    Enabling fast FPU save and restore... done.
-
+    ...snip...
 
     Console output for EC2 Instance i-806d8f1592e2a2efd
     Linux version 2.6.16-xenU (builder@patchbat.amazonsa) (gcc version 4.0.1 20050727 (Red Hat 4.0.1-5)) #1 SMP Thu Oct 26 08:41:26 SAST 2006
     BIOS-provided physical RAM map:
     Xen: 0000000000000000 - 000000006a400000 (usable)
-    980MB HIGHMEM available.
-    727MB LOWMEM available.
-    NX (Execute Disable) protection: active
-    IRQ lockup detection disabled
-    Built 1 zonelists
-    Kernel command line: root=/dev/sda1 ro 4
-    Enabling fast FPU save and restore... done.
+    ...snip...
 
 
 ### instance-dns
 
-Get DNS entries for EC2 instances
+List DNS name of EC2 Instance(s)
 
-`USAGE: instance-dns instance-id [instance-id]`
+    USAGE: instance-dns instance-id [instance-id]
 
     $ instances postgres | instance-dns
     i-89cefa9403373d7a5  ip-10-155-35-61.ap-southeast-2.compute.internal   ec2-54-214-206-114.ap-southeast-2.compute.amazonaws.com
     i-806d8f1592e2a2efd  ip-10-178-243-63.ap-southeast-2.compute.internal  ec2-54-214-244-90.ap-southeast-2.compute.amazonaws.com
 
 
+### instance-health-set-unhealthy
+
+Mark EC2 Instance(s) as unhealthy (to trigger replacement by ASG)
+
+    USAGE: instance-health-set-unhealthy instance-id [instance-id]
+
+
 ### instance-iam-profile
+
+List iam-profile of EC2 Instance(s)
+
+    USAGE: instance-iam-profile instance-id [instance-id]
 
 
 ### instance-ip
 
-Get IP Addresses for EC2 instances
+List ip address of EC2 Instance(s)
 
-`USAGE: instance-ip instance-id [instance-id]`
+    USAGE: instance-ip instance-id [instance-id]
 
     $ instances postgres | instance-ip
     i-89cefa9403373d7a5  10.155.35.61   54.214.206.114
@@ -339,11 +440,24 @@ Get IP Addresses for EC2 instances
 
 
 ### instance-ssh
+
+Establish SSH connection to EC2 Instance(s)
+
+    USAGE: instance-ssh [login] [instance-id] [instance-id]
+
+
 ### instance-ssh-details
+
+List details needed to SSH into EC2 Instance(s)
+
+    USAGE: instance-ssh-details [login] [instance-id] [instance-id]
+
 
 ### instance-stack
 
-`USAGE: instance-stack instance-id [instance-id]`
+List CloudFormation stack EC2 Instance(s) belong to (if any)
+
+    USAGE: instance-stack instance-id [instance-id]
 
     $ instances postgres | instance-stack
     postgres1  i-89cefa9403373d7a5
@@ -352,9 +466,9 @@ Get IP Addresses for EC2 instances
 
 ### instance-start
 
-Start some existing stopped EC2 instances.
+Start stopped EC2 Instance(s)
 
-`USAGE: instance-stop instance-id [instance-id]`
+    USAGE: instance-start instance-id [instance-id]
 
     $ instances postgres | instance-start
     i-a8b8dd6783e1a40cc  PreviousState=stopped  CurrentState=pending
@@ -363,25 +477,20 @@ Start some existing stopped EC2 instances.
 
 ### instance-state
 
-Get current state of instances.
+List state of EC2 Instance(s)
 
-`USAGE: instance-state instance-id [instance-id]`
+    USAGE: instance-state instance-id [instance-id]
 
     $ instances postgres | instance-state
     i-89cefa9403373d7a5  running
     i-806d8f1592e2a2efd  running
 
-*You could also just get this from `instances` command:*
-
-    i-89cefa9403373d7a5  ami-123456789012  t3.nano  running  postgres1  2019-12-10T08:17:20.000Z  ap-southeast-2a  None
-    i-806d8f1592e2a2efd  ami-123456789012  t3.nano  running  postgres2  2019-12-10T08:17:22.000Z  ap-southeast-2a  None
-
 
 ### instance-stop
 
-Stop EC2 instances
+Stop EC2 Instance(s)
 
-`USAGE: instance-stop instance-id [instance-id]`
+    USAGE: instance-stop instance-id [instance-id]
 
     $ instances postgres | instance-stop
 
@@ -391,12 +500,16 @@ Stop EC2 instances
 
 ### instance-tags
 
+List tags applied EC2 Instance(s)
+
+    USAGE: instance-tags instance-id [instance-id]
+
 
 ### instance-terminate
 
-Terminate EC2 instance(s).
+Terminate EC2 Instance(s)
 
-`USAGE: instance-terminate instance-id [instance-id]`
+    USAGE: instance-terminate instance-id [instance-id]
 
     $ instances | head -3 | instance-terminate
     You are about to terminate the following instances:
@@ -410,30 +523,36 @@ Terminate EC2 instance(s).
 
 ### instance-termination-protection
 
-`USAGE: instance-termination-protection instance-id [instance-id]`
+List current state of Termination Protection for EC2 Instance(s)
+
+    USAGE: instance-termination-protection instance-id [instance-id]
 
     $ instances | instance-termination-protection
-    i-4e15ece1de1a3f869	DisableApiTermination=true
-    i-89cefa9403373d7a5	DisableApiTermination=false
-    i-806d8f1592e2a2efd	DisableApiTermination=false
-    i-61e86ac6be1e2c193	DisableApiTermination=false
+    i-4e15ece1de1a3f869 DisableApiTermination=true
+    i-89cefa9403373d7a5 DisableApiTermination=false
+    i-806d8f1592e2a2efd DisableApiTermination=false
+    i-61e86ac6be1e2c193 DisableApiTermination=false
 
 
 ### instance-termination-protection-disable
 
-`USAGE: instance-termination-protection-disable instance-id [instance-id]`
+Disable EC2 Instance termination protection
+
+    USAGE: instance-termination-protection-disable instance-id [instance-id]
 
 
 ### instance-termination-protection-enable
 
-`USAGE: instance-termination-protection-enable instance-id [instance-id]`
+Enable EC2 Instance termination protection
+
+    USAGE: instance-termination-protection-enable instance-id [instance-id]
 
 
 ### instance-type
 
-List instance type for instances. *You could also just view output of `instances` command*
+List type of instance(s)
 
-`USAGE: instance-type instance-id [instance-id]`
+    USAGE: instance-type instance-id [instance-id]
 
     $ instances | instance-type
     i-4e15ece1de1a3f869  t3.nano
@@ -444,10 +563,16 @@ List instance type for instances. *You could also just view output of `instances
 
 ### instance-userdata
 
+List userdata for instance(s)
+
+    USAGE: instance-userdata instance-id [instance-id]
+
 
 ### instance-volumes
 
-`USAGE: instance-volumes instance-id [instance-id]`
+List volumes of instance(s)
+
+    USAGE: instance-volumes instance-id [instance-id]
 
     $ instances postgres | instance-volumes
     i-89cefa9403373d7a5  vol-cf5ddae9
@@ -456,18 +581,515 @@ List instance type for instances. *You could also just view output of `instances
 
 ### instance-vpc
 
-`USAGE: instance-vpc instance-id [instance-id]`
+List VPC of instance(s)
+
+    USAGE: instance-vpcs instance-id [instance-id]
 
 
-## bucket-commands
+## asg-commands
+
+
+### asgs
+
+List EC2 Autoscaling Groups
+
+
+### asg-capacity
+
+List min, desired and maximum capacities of EC2 Autoscaling Group(s)
+
+
+### asg-desired-size-set
+
+Set desired capacity of autoscaling group(s)
+
+
+### asg-instances
+
+List instances of autoscaling group(s)
+
+
+### asg-launch-configuration
+
+List Launch Configurations of Autoscaling Group(s)
+
+
+### launch-configurations
+
+List Launch Configurations
+
+
+### launch-configuration-asgs
+
+List EC2 Autoscaling Groups of Launch COnfiguration(s)
+
+
+### asg-max-size-set
+
+Set maximum size of autoscaling group(s)
+
+
+### asg-min-size-set
+
+Set minimum size of autoscaling group(s)
+
+
+### asg-processes_suspended
+
+List suspended processes of an autoscaling group
+
+
+### asg-resume
+
+Resume all processes of an autoscaling group
+
+
+### asg-suspend
+
+Suspend all processes of an autoscaling group
+
+
+### asg-stack
+
+List CloudFormation stack for asg(s)
+
+
+### asg-scaling-activities
+
+List scaling activities for Autoscaling Group(s)
+
+
+## cert-commands
+
+
+### certs
+
+List ACM Certificates
+
+
+### certs-arn
+
+Same as `certs` but with the ARN in first column
+
+
+### cert-users
+
+List resources using ACM Cert(s)
+
+    USAGE: cert-users cert-arn [cert-arn]
+
+
+### cert-delete
+
+Delete ACM Cert(s)
+
+    USAGE: cert-delete cert-arn [cert-arn]
+
+
+## cloudtrail-commands
+
+
+### cloudtrails
+
+List Cloudtrails
+
+    $ cloudtrails
+    failmode	failmode-cloudtrail	ap-southeast-2	IsMultiRegionTrail=true	IncludeGlobalServiceEvents=true
+
+
+### cloudtrail-status
+
+List logging status of Cloudtrails
+
+    USAGE: cloudtrail-status cloudtrail [cloudtrail]
+
+
+## ecr-commands
+
+
+### ecr-repositories
+
+List ECR Repositories
+
+
+### ecr-repository-images
+
+List images for ECR Repositories
+
+
+## elb-commands
+
+
+### elbs
+
+List ELBs
+Accepts LoadBalancer names or ARNS on STDIN and converts to LoadBalancer names
+
+    $ elbs
+    elb-MyLoadBalancer-1FNISWJN0W6N9  2019-12-13T10:24:55.220Z  subnet-eff2cf88
+    another-e-MyLoadBa-171CPCZF2E84T  2019-12-13T10:25:24.300Z  subnet-eff2cf88
+
+
+### elb-dnsname
+
+List DNS Names of ELB(s)
+
+     USAGE: elb-dnsname load-balancer [load-balancer]
+
+     $ elbs | elb-dnsname
+     elb-MyLoadBalancer-1FNISWJN0W6N9  elb-MyLoadBalancer-1FNISWJN0W6N9-563832045.ap-southeast-2.elb.amazonaws.com
+     another-e-MyLoadBa-171CPCZF2E84T  another-e-MyLoadBa-171CPCZF2E84T-1832721930.ap-southeast-2.elb.amazonaws.com
+
+
+### elb-instances
+
+List instances of ELB(s)
+
+     USAGE: elb-instances load-balancer [load-balancer]
+
+
+### elb-stack
+
+List CloudFormation stack names of ELB(s)
+
+    USAGE: elb-stack load-balancer [load-balancer]
+
+    $ elbs | elb-stack
+    elb          elb-MyLoadBalancer-1FNISWJN0W6N9
+    another-elb  another-e-MyLoadBa-171CPCZF2E84T
+
+
+## iam-commands
+
+
+### iam-roles
+
+List IAM Roles
+
+    $ iam-roles
+    config-role-ap-southeast-2               AROAI3QHAU3J2CDRNLQHD  2017-02-02T03:03:02Z
+    AWSBatchServiceRole                      AROAJJWRGUPTRXTV52TED  2017-03-09T05:31:39Z
+    ecsInstanceRole                          AROAJFQ3WMZXESGIKW5YD  2017-03-09T05:31:39Z
+
+
+### iam-role-principal
+
+List role principal for IAM Role(s)
+
+    USAGE: iam-role-principal role-name [role-name]
+
+
+## image-commands
+
+
+### images
+
+List EC2 AMI's
+
+Usage: images [owner] [image-id] [image-id]...
+
+owner defaults to `self` or can one or more of:
+
+- an AWS_ACCOUNT_ID  (e.g. 1234567890)
+- an AWS_OWNER_ALIAS (amazon, amazon-marketplace, microsoft)
+
+image_id can be one or more AMIs
+
+Trialing a different approach for grabbing resource ids from input.  
+As normal, you can pipe resource ids in as first token on each line.  
+We treat all args that don't start with ami- as owner identifiers.  
+
+Trialing a new pattern for output - putting the Name at the end.  
+This is more like the output of `ls -la`
+
+- Pro: Preceding fields tend to be of the same length
+- Pro: Easier for eyes to scan final column for names(?)
+- Con: Using this pattern for instances() would put name past 80 char point
+- Con: Migrating instances() to this output is A Big Change (not made lightly)
+
+
+### image-deregister
+
+Deregister AMI(s)
+
+    USAGE: image-deregister image_id [image_id]
+
+
+## keypair-commands
+
+
+### keypairs
+
+List EC2 SSH Keypairs in current Region
+
+    $ keypairs
+    alice  8f:85:9a:1e:6c:76:29:34:37:45:de:7f:8d:f9:70:eb
+    bob    56:73:29:c2:ad:7b:6f:b6:f2:f3:b4:de:e4:2b:12:d4
+
+
+### keypair-create
+
+Create SSH Keypair on local machine and import public key into new EC2 Keypair.
+
+Provides benefits over AWS creating the keypair:
+
+Amazon never has access to private key.  
+Private key is protected with passphrase before being written to disk.  
+Keys is written to ~/.ssh with correct file permissions.  
+You control the SSH Key type (algorithm, length, etc).  
+
+    USAGE: keypair-delete key_name [key_name]
+
+    $ keypair-create yet-another-keypair
+    Creating /home/m/.ssh/yet-another-keypair
+    Generating public/private rsa key pair.
+    Enter passphrase (empty for no passphrase):
+    Enter same passphrase again:
+    Your identification has been saved in /home/m/.ssh/yet-another-keypair.
+    Your public key has been saved in /home/m/.ssh/yet-another-keypair.pub.
+    The key fingerprint is:
+    SHA256:zIpbxLo7rpQvKyezOLATk96B1kSL0QP41q6x8tUrySk m@localhost.localdomain
+    The key's randomart image is:
+    +---[RSA 4096]----+
+    |..o              |
+    |.. +             |
+    | .+.o            |
+    | .oo.. o         |
+    | o+.  o S        |
+    |=o.+.= .         |
+    |+++==o+          |
+    |XoE+*+ .         |
+    |o@+**+.          |
+    +----[SHA256]-----+
+    {
+        "KeyFingerprint": "21:82:f9:5b:79:d6:dc:0f:7b:79:43:7c:c5:34:6c:2d",
+        "KeyName": "yet-another-keypair"
+    }
+
+!!! Note
+    KeyPair Name defaults to "$(aws-account-alias)-$(region)" if none provided
+
+
+### keypair-delete
+
+Delete EC2 SSH Keypairs by providing their names as arguments or via STDIN
+
+    USAGE: keypair-delete key_name [key_name]
+
+    $ keypair-delete alice bob
+    You are about to delete the following EC2 SSH KeyPairs:
+    alice
+    bob
+    Are you sure you want to continue? y
+
+    $ keypairs | keypair-delete
+    You are about to delete the following EC2 SSH KeyPairs:
+    yet-another-keypair
+    Are you sure you want to continue? y
+
+
+## kms-commands
+
+
+### kms-encrypt
+
+Encrypt and base64 encode STDIN or file
+
+    USAGE: kms-encrypt key_id/alias_id [plaintext_file]
+
+    $ echo foobar | kms-encrypt alias/default
+    AQICAHgcyN4vd3V/OB7NKI6IMbpENEu1+UfyiU...
+
+
+### kms-decrypt
+
+base64 decode and decrypt KMS Encrypted file or STDIN
+
+    USAGE: kms-decrypt [ciphertext_file]
+
+    $ kms-decrypt ciphertext.txt
+    foobar
+
+    $ echo foobar | kms-encrypt alias/default | kms-decrypt
+    foobar
+
+
+### kms-aliases
+
+List KMS Aliases
+
+    $ kms-aliases default
+    alias/default  d714a175-db12-4574-8f27-aa071a1dfd8a  arn:aws:kms:ap-southeast-2:089834043791:alias/default
+
+
+### kms-alias-create
+
+Create alias for KMS Key
+
+    USAGE: kms-alias-create alias_name key_id
+
+    $ kms-keys | tail -1
+    d714a175-db12-4574-8f27-aa071a1dfd8a
+
+    $ kms-keys | tail -1 | kms-alias-create alias/foobar
+
+    $ kms-aliases foobar
+    alias/foobar  d714a175-db12-4574-8f27-aa071a1dfd8a  arn:aws:kms:ap-southeast-2:089834043791:alias/foobar
+
+
+### kms-alias-delete
+
+Delete alias for KMS Key
+
+    USAGE: kms-alias-delete alias_name [alias_name]
+
+    $ kms-aliases foobar | kms-alias-delete
+    You are about to delete the following kms aliases:
+    alias/foobar
+    Are you sure you want to continue? y
+
+
+### kms-keys
+
+List KMS Keys
+
+    $ kms-keys
+    5044958c-151d-4995-bed4-dd05c1385b48
+    8ada3e65-e377-4435-a709-fbe75dfa1dd0
+    d714a175-db12-4574-8f27-aa071a1dfd8a
+
+
+### kms-key-create
+
+Create a KMS Key
+
+    $ kms-key-create
+    9e94333b-8e85-497a-9791-e7c5edf9c35e
+
+
+### kms-key-details
+
+List details for KMS Key(s)
+
+
+### kms-key-disable
+
+Disable KMS Key(s)
+
+    USAGE: kms-key-disable key_id [key_id]
+
+    $ kms-key-disable  9e94333b-8e85-497a-9791-e7c5edf9c35e
+
+
+### kms-key-enable
+
+Enable KMS Key(s)
+
+    USAGE: kms-key-enable key_id [key_id]
+
+    $ kms-key-enable  9e94333b-8e85-497a-9791-e7c5edf9c35e
+
+
+## lambda-commands
+
+
+### lambda-functions
+
+List lambda functions
+
+    $ lambda-functions
+    stars    2019-12-18T10:00:00.000+0000  python2.7  256
+    stripes  2019-12-19T10:21:42.444+0000  python3.7  128
+
+
+### lambda-function-memory
+
+List memorySize for lambda function(s)
+
+    USAGE: lambda-function-memory function [function]
+
+
+### lambda-function-memory-set
+
+Update memorySize for lambda function(s)
+
+    USAGE: lambda-function-memory-set memory function [function]
+
+
+### lambda-function-memory-step
+
+Repeatedly update memorySize for lambda function(s)
+
+Useful for measuring impact of memory on cost/performance.
+The function increases memorySize by 64KB every two minutes
+until it reaches the value requested. There is a two minute
+delay between increases to provide time to collect data from
+function execution.
+
+    USAGE: lambda-function-memory-step memory function [function]
+
+
+## log-commands
+
+
+### log-groups
+
+List CloudWatch Log Groups
+
+    $ log-groups
+    /aws/lambda/stars2  1576495961429  0   11736
+    /aws/lambda/stars   1576566745961  0  107460
+    /aws/lambda/walk    1576567300172  0   11794
+
+
+## rds-commands
+
+
+### rds-db-instances
+
+List RDS Database Instances
+
+
+## route53-commands
+
+
+### hosted-zones
+
+List Route53 Hosted Zones
+
+    $ hosted-zones
+    /hostedzone/Z3333333333333  5   NotPrivateZone  bash-my-aws.org.
+    /hostedzone/Z5555555555555  2   NotPrivateZone  bash-my-universe.com.
+    /hostedzone/Z4444444444444  3   NotPrivateZone  bashmyaws.org.
+    /hostedzone/Z1111111111111  3   NotPrivateZone  bash-my-aws.com.
+    /hostedzone/Z2222222222222  3   NotPrivateZone  bashmyaws.com.
+
+
+### hosted-zone-ns-records
+
+Generate NS records for delegating domain to AWS
+
+    $ hosted-zones bash-my-aws.org
+    /hostedzone/ZJ6ZCG2UD6OKX  5  NotPrivateZone  bash-my-aws.org.
+
+    $ hosted-zones bash-my-aws.org | hosted-zone-ns-records
+    bash-my-aws.org. 300 IN NS	ns-786.awsdns-34.net.
+    bash-my-aws.org. 300 IN NS	ns-1549.awsdns-01.co.uk.
+    bash-my-aws.org. 300 IN NS	ns-362.awsdns-45.com.
+    bash-my-aws.org. 300 IN NS	ns-1464.awsdns-55.org.
+
+
+## s3-commands
+
 
 ### buckets
 
 List S3 Buckets
 
     $ buckets
-    example-bucket          2019-12-07  06:51:05.064372
-    another-example-bucket  2019-12-07  06:51:12.022496
+    web-assets  2019-12-20  08:24:38.182045
+    backups     2019-12-20  08:24:44.351215
+    archive     2019-12-20  08:24:57.567652
 
 
 ### bucket-acls
@@ -508,162 +1130,33 @@ Remove an S3 Bucket, and delete all objects if it's not empty.
     remove_bucket: another-example-bucket
 
 
-## cert-commands
-
-ACM Certificates
-
-### certs
-### cert-delete
-### cert-users
-### certs-arn
+## sts-commands
 
 
-## ecr-commands
+### sts-assume-role
 
-### ecr-repositories
-### ecr-repository-images
+Assume an IAM Role
 
-
-## elb-commands
-
-EC2 Classic Load Balancers
-
-### elbs
-
-    $ elbs
-    elb-MyLoadBalancer-1FNISWJN0W6N9  2019-12-13T10:24:55.220Z  subnet-eff2cf88
-    another-e-MyLoadBa-171CPCZF2E84T  2019-12-13T10:25:24.300Z  subnet-eff2cf88
-
-
-### elb-dnsname
-
-`USAGE: elb-dnsname load-balancer`
-
-    $ elbs | elb-dnsname
-    elb-MyLoadBalancer-1FNISWJN0W6N9  elb-MyLoadBalancer-1FNISWJN0W6N9-563832045.ap-southeast-2.elb.amazonaws.com
-    another-e-MyLoadBa-171CPCZF2E84T  another-e-MyLoadBa-171CPCZF2E84T-1832721930.ap-southeast-2.elb.amazonaws.com
-
-
-### elb-instances
-
-
-### elb-stack
-
-`USAGE: elb-stack load-balancer [load-balancer]`
-
-    $ elbs | elb-stack
-    elb          elb-MyLoadBalancer-1FNISWJN0W6N9
-    another-elb  another-e-MyLoadBa-171CPCZF2E84T
-
-
-## iam-commands
-
-### iam-role-principal
-### iam-roles
-
-
-## keypair-commands
-
-List, create and delete EC2 SSH Keypairs
-
-
-### keypairs
-
-List EC2 SSH Keypairs in current Region
-
-    $ keypairs
-    alice  8f:85:9a:1e:6c:76:29:34:37:45:de:7f:8d:f9:70:eb
-    bob    56:73:29:c2:ad:7b:6f:b6:f2:f3:b4:de:e4:2b:12:d4
-
-
-### keypair-create
-
-Create SSH Keypair on local machine and import public key into new EC2 Keypair.
-
-Provides benefits over AWS creating the keypair:
-
-- Amazon never has access to private key
-- Private key is protected with passphrase before being written to disk
-- Keys is written to ~/.ssh with correct file permissions
-- You control the SSH Key type (algorithm, length, etc)
-
-    $ keypair-create yet-another-keypair
-    Creating /home/m/.ssh/yet-another-keypair
-    Generating public/private rsa key pair.
-    Enter passphrase (empty for no passphrase):
-    Enter same passphrase again:
-    Your identification has been saved in /home/m/.ssh/yet-another-keypair.
-    Your public key has been saved in /home/m/.ssh/yet-another-keypair.pub.
-    The key fingerprint is:
-    SHA256:zIpbxLo7rpQvKyezOLATk96B1kSL0QP41q6x8tUrySk m@localhost.localdomain
-    The key's randomart image is:
-    +---[RSA 4096]----+
-    |..o              |
-    |.. +             |
-    | .+.o            |
-    | .oo.. o         |
-    | o+.  o S        |
-    |=o.+.= .         |
-    |+++==o+          |
-    |XoE+*+ .         |
-    |o@+**+.          |
-    +----[SHA256]-----+
-    {
-        "KeyFingerprint": "21:82:f9:5b:79:d6:dc:0f:7b:79:43:7c:c5:34:6c:2d",
-        "KeyName": "yet-another-keypair"
-    }
-
-!!! Note
-    KeyPair Name defaults to "$(aws-account-alias)-$(region)" if none provided
-
-
-### keypair-delete
-
-Delete EC2 SSH Keypairs by providing their names as arguments or via STDIN
-
-    $ keypair-delete alice bob
-    You are about to delete the following EC2 SSH KeyPairs:
-    alice
-    bob
-    Are you sure you want to continue? y
-
-    $ keypairs | keypair-delete
-    You are about to delete the following EC2 SSH KeyPairs:
-    yet-another-keypair
-    Are you sure you want to continue? y
-
-
-## kms-commands
-
-### kms-encrypt
-
-Encrypt and base64 encode STDIN or file
-
-    $ echo foobar | kms-encrypt alias/default
-    AQICAHgcyN4vd3V/OB7NKI6IMbpENEu1+UfyiUjVj1ieYvnwnwEB83vXXk/tXx1M2RVa8lB7...
-
-### kms-decrypt
-
-Base64 decode and decrypt KMS Encrypted file or STDIN
-
-    $ kms-decrypt ciphertext.txt
-    foobar
-
-    $ echo foobar | kms-encrypt alias/default | kms-decrypt
-    foobar
-
-
-### kms-keys
-
-List KMS Keys
-
-    $ kms-keys
-    5044958c-151d-4995-bed4-dd05c1385b48
-    8ada3e65-e377-4435-a709-fbe75dfa1dd0
-    d714a175-db12-4574-8f27-aa071a1dfd8a
+    USAGE: sts-assume-role role_arn
 
 
 ## vpc-commands
+
+
+### pcxs
+
+List VPC Peering connections
+
+
+### subnets
+
+List subnets for all VPCs
+
+    $ subnets
+    subnet-34fd9cfa  vpc-018d9739  ap-southeast-2c  172.31.32.0/20  NO_NAME
+    subnet-8bb774fe  vpc-018d9739  ap-southeast-2a  172.31.0.0/20   NO_NAME
+    subnet-9eea2c07  vpc-018d9739  ap-southeast-2b  172.31.16.0/20  NO_NAME
+
 
 ### vpcs
 
@@ -673,29 +1166,113 @@ List VPCs
     vpc-018d9739  default-vpc  NO_NAME  172.31.0.0/16  NO_STACK  NO_VERSION
 
 
-### vpc-az-count
-
-List number of Availability Zones for VPCs
-
-`USAGE: vpc-az-count vpc-id [vpc-id]`
-
-    $ vpcs | vpc-az-count
-    vpc-018d9739 3
-
-
 ### vpc-azs
 
-List availability zones for VPCs
+List availability zones of VPC(s)
 
-`USAGE: vpc-azs vpc-id [vpc-id]`
+    USAGE: vpc-azs vpc-id [vpc-id]
 
     $ vpcs | vpc-azs
     vpc-018d9739 ap-southeast-2a ap-southeast-2b ap-southeast-2c
 
 
+### vpc-az-count
+
+List number of Availability Zones of VPC(s)
+
+    USAGE: vpc-az-count vpc-id [vpc-id]
+
+    $ vpcs | vpc-az-count
+    vpc-018d9739 3
+
+
+### vpc-lambda-functions
+
+List lambda functions of VPC(s)
+
+    USAGE: vpc-lambda-functions vpc-id [vpc-id]
+
+
+### vpc-dhcp-options-ntp
+
+List NTP servers of VPC(s)
+
+    USAGE: vpc-dhcp-options-ntp vpc-id [vpc-id]
+
+
+### vpc-endpoints
+
+List VPC Endpoints of VPC(s)
+
+    USAGE: vpc-endpoints vpc-id [vpc-id]
+
+
+### vpc-endpoint-services
+
+List available VPC endpoint services
+
+    USAGE: vpc-endpoint-services vpc-id [vpc-id]
+
+
+### vpc-igw
+
+List Internet Gateway of VPC(s)
+
+    USAGE: vpc-igw vpc-id [vpc-id]
+
+
+### vpc-route-tables
+
+List Route Tables of VPC(s)
+
+    USAGE: vpc-route-tables vpc-id [vpc-id]
+
+    $ vpcs | vpc-route-tables
+    rtb-8e841c39  vpc-018d9739  NO_NAME
+
+
+### vpc-nat-gateways
+
+List NAT Gateways of VPC(s)
+
+    USAGE: vpc-nat-gateways vpc-id [vpc-id]
+
+
+### vpc-subnets
+
+List subnets of VPC(s)
+
+    USAGE: vpc-subnets vpc-id [vpc-id]
+
+    $ vpcs | vpc-subnets
+    subnet-34fd9cfa  vpc-018d9739  ap-southeast-2c  172.31.32.0/20  NO_NAME
+    subnet-8bb774fe  vpc-018d9739  ap-southeast-2a  172.31.0.0/20   NO_NAME
+    subnet-9eea2c07  vpc-018d9739  ap-southeast-2b  172.31.16.0/20  NO_NAME
+
+
+### vpc-network-acls
+
+List Network ACLs of VPC(s)
+
+    USAGE: vpc-network-acls vpc-id [vpc-id]
+
+    $ vpcs | vpc-network-acls
+    acl-ff4914d1  vpc-018d9739
+
+
+### vpc-rds
+
+List RDS instances of VPC(s)
+
+    USAGE: vpc-rds vpc-id [vpc-id]
+
+
 ### vpc-default-delete
 
-Prints commands you would need to run to delete that pesky default VPC
+Print commands you would need to run to delete that pesky default VPC
+Exclude default VPCs that contain:
+- instances
+- lambda functions
 
     $ vpc-default-delete
 
@@ -704,119 +1281,3 @@ Prints commands you would need to run to delete that pesky default VPC
     aws --region ap-southeast-2 ec2 delete-subnet --subnet-id=subnet-9eea2c07
     aws --region ap-southeast-2 ec2 delete-subnet --subnet-id=subnet-34fd9cfa
     aws --region ap-southeast-2 ec2 delete-vpc --vpc-id=vpc-018d9739
-
-
-### vpc-dhcp-options-ntp
-### vpc-endpoints
-### vpc-igw
-### vpc-lambda-commands
-
-
-### vpc-nat-gateways
-
-`USAGE: vpc-nat-gateways vpc-id [vpc-id]`
-
-
-### vpc-network-acls
-
-`USAGE: vpc-network-acls vpc-id [vpc-id]`
-
-    $ vpcs | vpc-network-acls
-    acl-ff4914d1  vpc-018d9739
-
-
-### vpc-rds
-
-
-### vpc-route-tables
-
-`USAGE: vpc-route-tables vpc-id [vpc-id]`
-
-    $ vpcs | vpc-route-tables
-    rtb-8e841c39  vpc-018d9739  NO_NAME
-
-
-### vpc-subnets
-
-List subnets for vpcs
-
-`USAGE: vpc-subnets vpc-id [vpc-id]`
-
-    $ vpcs | vpc-subnets
-    subnet-34fd9cfa  vpc-018d9739  ap-southeast-2c  172.31.32.0/20  NO_NAME
-    subnet-8bb774fe  vpc-018d9739  ap-southeast-2a  172.31.0.0/20   NO_NAME
-    subnet-9eea2c07  vpc-018d9739  ap-southeast-2b  172.31.16.0/20  NO_NAME
-
-
-### pcxs
-
-List VPC Peering Connections
-
-
-### subnets
-
-List all subnets
-
-    $ subnets
-    subnet-34fd9cfa  vpc-018d9739  ap-southeast-2c  172.31.32.0/20  NO_NAME
-    subnet-8bb774fe  vpc-018d9739  ap-southeast-2a  172.31.0.0/20   NO_NAME
-    subnet-9eea2c07  vpc-018d9739  ap-southeast-2b  172.31.16.0/20  NO_NAME
-
-
-## asg-commands
-
-### asgs
-### asg-capacity
-### asg-desired-size-set
-### asg-instances
-### asg-launch-configuration
-### asg-max-size-set
-### asg-min-size-set
-### asg-processes_suspended
-### asg-resume
-### asg-scaling-activities
-### asg-stack
-### asg-suspend
-
-### launch-configurations
-### launch-configuration-asgs
-
-
-## lambda-commands
-
-### lambda-commands
-### lambda-function-memory
-### lambda-function-memory-set
-### lambda-function-memory-step
-
-## Other
-### cloudtrails
-### cloudtrail-status
-### columnise
-### image-deregister
-### images
-### log-groups
-### rds-db-instances
-### sts-assume-role
-
-
-## Internal functions
-__bma_error
-__bma_read_filters
-__bma_read_inputs
-__bma_read_stdin
-__bma_usage
-_bma_derive_params_from_stack_and_template
-_bma_derive_params_from_template
-_bma_derive_stack_from_params
-_bma_derive_stack_from_template
-_bma_derive_template_from_params
-_bma_derive_template_from_stack
-_bma_stack_args
-_bma_stack_capabilities
-_bma_stack_diff_params
-_bma_stack_diff_template
-_bma_stack_name_arg
-_bma_stack_params_arg
-_bma_stack_template_arg
-
