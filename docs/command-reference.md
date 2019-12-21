@@ -20,6 +20,7 @@ the most interest to readers.
 
 
 
+
 ## aws-account-commands
 
 
@@ -172,19 +173,116 @@ Returns ARN(s) for stacks.
 
 ### stack-cancel-update
 
+Cancel an in-progress stack update
 
 
 ### stack-create
 
+Create a CloudFormation Stack
+
+*See suggested [CloudFormation File Naming Conventions](/cloudformation-naming/)
+to take advantage of shorter commands*
+
+    USAGE: stack-create stack [template-file] [parameters-file]             \
+                [--capabilities=OPTIONAL_VALUE] [--role-arn=OPTIONAL_VALUE]
+
+    $ stack-create params/asg-params-prod.json
+    Resolved arguments: asg-prod ./asg.yml params/asg-params-prod.json
+    arn:aws:cloudformation:ap-southeast-2:812094344564:stack/asg-prod/98d40130-23f2-11ea-b7c1-06494f833672
+    ----------------------------------------------------------------------------------------------
+    |                                     DescribeStackEvents                                    |
+    +---------------------------+-----------+------------------------------+---------------------+
+    |  2019-12-21T13:05:44.261Z |  asg-prod |  AWS::CloudFormation::Stack  |  CREATE_IN_PROGRESS |
+    --------------------------------------------------------------------------------------------------------------------
+    |                                                DescribeStackEvents                                               |
+    +--------------------------+----------------------+-----------------------------------------+----------------------+
+    |  2019-12-21T13:05:44.261Z|  asg-prod            |  AWS::CloudFormation::Stack             |  CREATE_IN_PROGRESS  |
+    |  2019-12-21T13:05:48.351Z|  LaunchConfiguration |  AWS::AutoScaling::LaunchConfiguration  |  CREATE_IN_PROGRESS  |
+    |  2019-12-21T13:05:48.828Z|  LaunchConfiguration |  AWS::AutoScaling::LaunchConfiguration  |  CREATE_IN_PROGRESS  |
+    |  2019-12-21T13:05:49.187Z|  LaunchConfiguration |  AWS::AutoScaling::LaunchConfiguration  |  CREATE_COMPLETE     |
+    |  2019-12-21T13:05:51.230Z|  AutoScalingGroup    |  AWS::AutoScaling::AutoScalingGroup     |  CREATE_IN_PROGRESS  |
+    |  2019-12-21T13:05:51.837Z|  AutoScalingGroup    |  AWS::AutoScaling::AutoScalingGroup     |  CREATE_IN_PROGRESS  |
+    |  2019-12-21T13:05:52.950Z|  AutoScalingGroup    |  AWS::AutoScaling::AutoScalingGroup     |  CREATE_COMPLETE     |
+    |  2019-12-21T13:05:54.493Z|  asg-prod            |  AWS::CloudFormation::Stack             |  CREATE_COMPLETE     |
+    +--------------------------+----------------------+-----------------------------------------+----------------------+
 
 
 ### stack-update
 
+Update a CloudFormation Stack
+
+*See suggested [CloudFormation File Naming Conventions](/cloudformation-naming/)
+to take advantage of shorter commands*
+
+    USAGE: stack-update stack [template-file] [parameters-file] \
+                  [--capabilities=OPTIONAL_VALUE] [--role-arn=OPTIONAL_VALUE]
+
+    $ stack-update params/asg-params-prod.json
+    Resolved arguments: asg-prod ./asg.yml params/asg-params-prod.json
+    arn:aws:cloudformation:ap-southeast-2:812094344564:stack/asg-prod/98d40130-23f2-11ea-b7c1-06494f833672
+    --------------------------------------------------------------------------------------------------------------------
+    |                                                DescribeStackEvents                                               |
+    +--------------------------+----------------------+-----------------------------------------+----------------------+
+    |  2019-12-21T13:05:44.261Z|  asg-prod            |  AWS::CloudFormation::Stack             |  CREATE_IN_PROGRESS  |
+    |  2019-12-21T13:05:48.351Z|  LaunchConfiguration |  AWS::AutoScaling::LaunchConfiguration  |  CREATE_IN_PROGRESS  |
+    |  2019-12-21T13:05:48.828Z|  LaunchConfiguration |  AWS::AutoScaling::LaunchConfiguration  |  CREATE_IN_PROGRESS  |
+    |  2019-12-21T13:05:49.187Z|  LaunchConfiguration |  AWS::AutoScaling::LaunchConfiguration  |  CREATE_COMPLETE     |
+    |  2019-12-21T13:05:51.230Z|  AutoScalingGroup    |  AWS::AutoScaling::AutoScalingGroup     |  CREATE_IN_PROGRESS  |
+    |  2019-12-21T13:05:51.837Z|  AutoScalingGroup    |  AWS::AutoScaling::AutoScalingGroup     |  CREATE_IN_PROGRESS  |
+    |  2019-12-21T13:05:52.950Z|  AutoScalingGroup    |  AWS::AutoScaling::AutoScalingGroup     |  CREATE_COMPLETE     |
+    |  2019-12-21T13:05:54.493Z|  asg-prod            |  AWS::CloudFormation::Stack             |  CREATE_COMPLETE     |
+    |  2019-12-21T13:12:43.731Z|  asg-prod            |  AWS::CloudFormation::Stack             |  UPDATE_IN_PROGRESS  |
+    |  2019-12-21T13:12:48.294Z|  AutoScalingGroup    |  AWS::AutoScaling::AutoScalingGroup     |  UPDATE_IN_PROGRESS  |
+    -------------------------------------------------------------------------------------------------------------------------------------
+    |                                                        DescribeStackEvents                                                        |
+    +--------------------------+----------------------+-----------------------------------------+---------------------------------------+
+    |  2019-12-21T13:05:44.261Z|  asg-prod            |  AWS::CloudFormation::Stack             |  CREATE_IN_PROGRESS                   |
+    |  2019-12-21T13:05:48.351Z|  LaunchConfiguration |  AWS::AutoScaling::LaunchConfiguration  |  CREATE_IN_PROGRESS                   |
+    |  2019-12-21T13:05:48.828Z|  LaunchConfiguration |  AWS::AutoScaling::LaunchConfiguration  |  CREATE_IN_PROGRESS                   |
+    |  2019-12-21T13:05:49.187Z|  LaunchConfiguration |  AWS::AutoScaling::LaunchConfiguration  |  CREATE_COMPLETE                      |
+    |  2019-12-21T13:05:51.230Z|  AutoScalingGroup    |  AWS::AutoScaling::AutoScalingGroup     |  CREATE_IN_PROGRESS                   |
+    |  2019-12-21T13:05:51.837Z|  AutoScalingGroup    |  AWS::AutoScaling::AutoScalingGroup     |  CREATE_IN_PROGRESS                   |
+    |  2019-12-21T13:05:52.950Z|  AutoScalingGroup    |  AWS::AutoScaling::AutoScalingGroup     |  CREATE_COMPLETE                      |
+    |  2019-12-21T13:05:54.493Z|  asg-prod            |  AWS::CloudFormation::Stack             |  CREATE_COMPLETE                      |
+    |  2019-12-21T13:12:43.731Z|  asg-prod            |  AWS::CloudFormation::Stack             |  UPDATE_IN_PROGRESS                   |
+    |  2019-12-21T13:12:48.294Z|  AutoScalingGroup    |  AWS::AutoScaling::AutoScalingGroup     |  UPDATE_IN_PROGRESS                   |
+    |  2019-12-21T13:14:05.182Z|  AutoScalingGroup    |  AWS::AutoScaling::AutoScalingGroup     |  UPDATE_COMPLETE                      |
+    |  2019-12-21T13:14:07.118Z|  asg-prod            |  AWS::CloudFormation::Stack             |  UPDATE_COMPLETE_CLEANUP_IN_PROGRESS  |
+    |  2019-12-21T13:14:07.820Z|  asg-prod            |  AWS::CloudFormation::Stack             |  UPDATE_COMPLETE                      |
+    +--------------------------+----------------------+-----------------------------------------+---------------------------------------+
 
 
 ### stack-delete
 
-delete an existing stack
+Delete a CloudFormation Stack
+
+    USAGE: stack-delete stack [stack]
+
+    $ stacks | stack-delete
+    You are about to delete the following stacks:
+    asg-prod
+    Are you sure you want to continue? y
+    -------------------------------------------------------------------------------------------------------------------------------------
+    |                                                        DescribeStackEvents                                                        |
+    +--------------------------+----------------------+-----------------------------------------+---------------------------------------+
+    |  2019-12-21T13:05:44.261Z|  asg-prod            |  AWS::CloudFormation::Stack             |  CREATE_IN_PROGRESS                   |
+    |  2019-12-21T13:05:48.351Z|  LaunchConfiguration |  AWS::AutoScaling::LaunchConfiguration  |  CREATE_IN_PROGRESS                   |
+    |  2019-12-21T13:05:48.828Z|  LaunchConfiguration |  AWS::AutoScaling::LaunchConfiguration  |  CREATE_IN_PROGRESS                   |
+    |  2019-12-21T13:05:49.187Z|  LaunchConfiguration |  AWS::AutoScaling::LaunchConfiguration  |  CREATE_COMPLETE                      |
+    |  2019-12-21T13:05:51.230Z|  AutoScalingGroup    |  AWS::AutoScaling::AutoScalingGroup     |  CREATE_IN_PROGRESS                   |
+    |  2019-12-21T13:05:51.837Z|  AutoScalingGroup    |  AWS::AutoScaling::AutoScalingGroup     |  CREATE_IN_PROGRESS                   |
+    |  2019-12-21T13:05:52.950Z|  AutoScalingGroup    |  AWS::AutoScaling::AutoScalingGroup     |  CREATE_COMPLETE                      |
+    |  2019-12-21T13:05:54.493Z|  asg-prod            |  AWS::CloudFormation::Stack             |  CREATE_COMPLETE                      |
+    |  2019-12-21T13:12:43.731Z|  asg-prod            |  AWS::CloudFormation::Stack             |  UPDATE_IN_PROGRESS                   |
+    |  2019-12-21T13:12:48.294Z|  AutoScalingGroup    |  AWS::AutoScaling::AutoScalingGroup     |  UPDATE_IN_PROGRESS                   |
+    |  2019-12-21T13:14:05.182Z|  AutoScalingGroup    |  AWS::AutoScaling::AutoScalingGroup     |  UPDATE_COMPLETE                      |
+    |  2019-12-21T13:14:07.118Z|  asg-prod            |  AWS::CloudFormation::Stack             |  UPDATE_COMPLETE_CLEANUP_IN_PROGRESS  |
+    |  2019-12-21T13:14:07.820Z|  asg-prod            |  AWS::CloudFormation::Stack             |  UPDATE_COMPLETE                      |
+    |  2019-12-21T13:18:06.709Z|  asg-prod            |  AWS::CloudFormation::Stack             |  DELETE_IN_PROGRESS                   |
+    |  2019-12-21T13:18:08.931Z|  AutoScalingGroup    |  AWS::AutoScaling::AutoScalingGroup     |  DELETE_IN_PROGRESS                   |
+    
+    An error occurred (ValidationError) when calling the DescribeStackEvents operation: Stack [asg-prod] does not exist
+*Note that the error reported at the end of `stack-delete` command is just AWSCLI saying it can't find the stack anymore.*
 
 
 ### stack-exports
@@ -197,9 +295,7 @@ delete an existing stack
 
 ### stack-failure
 
-type: detail
-return the reason a stack failed to update/create/delete
-FIXME: only grab the latest failure
+Return reason a stack failed to update/create/delete
 
 
 ### stack-events
@@ -272,69 +368,100 @@ List instances in stack(s)
 
 ### stack-parameters
 
-return the parameters applied to a stack
+List parameters of stack
 
 
 ### stack-status
 
-type: detail
-return the current status of a stack
+List status of stack
 
 
 ### stack-tag
 
-return a selected stack tag
-
-
-### stack-tag-apply
-
-apply a stack tag
-
-
-### stack-tag-delete
-
-delete a stack tag
+Return selected stack tag
 
 
 ### stack-tail
 
-type: detail
-follow the events occuring for a stack
+Show all events for CF stack until update completes or fails.
 
 
 ### stack-template
 
-return the template applied to a stack
+Return template of a stack
 
 
 ### stack-tags
 
-return the stack-tags applied to a stack
+List stack-tags applied to a stack
 
 
 ### stack-tags-text
 
-return all stack tags on a single line
+List stack-tags applied to a stack on a single line
 
 
 ### stack-outputs
 
-type: detail
-return the outputs of a stack
+List outputs of a stack
 
 
 ### stack-validate
 
-type: detail
-validate a stack template
+Validate a stack template
 
 
 ### stack-diff
 
-type: detail
-return differences between a template and Stack
+Compare live stack against local template (and optional params file)
+
+    USAGE: stack-diff stack [template-file]
+
+    $ stack-diff params/asg-params-prod.json
+    Resolved arguments: asg-prod ./asg.yml params/asg-params-prod.json
+    template for stack (asg-prod) and contents of file (./asg.yml) are the same
+
+    Resolved arguments: asg-prod ./asg.yml params/asg-params-prod.json
+    --- params
+    +++ params/asg-params-prod.json
+    @@ -1,11 +1,11 @@
+     [
+       {
+         "ParameterKey": "AsgMaxSize",
+    -    "ParameterValue": "5"
+    +    "ParameterValue": "2"
+       },
+       {
+         "ParameterKey": "AsgMinSize",
+    -    "ParameterValue": "0"
+    +    "ParameterValue": "1"
+       },
+       {
+         "ParameterKey": "InstanceType",
 report changes which would be made to stack if template were applied
 report on what changes would be made to stack by applying params
+Derive and check arguments for:
+
+- stack-create
+- stack-delete
+- stack-diff
+
+In the interests of making the functions simple and a shallow read,
+it's unusual for us to abstract out shared code like this.
+This bit is doing some funky stuff though and I think it deserves
+to go in it's own function to DRY (Don't Repeat Yourself) it up a bit.
+
+This function takes the unusual approach of writing to variables of the
+calling function:
+
+- stack
+- template
+- params
+
+This is generally not good practice for readability and unexpected outcomes.
+To contain this, the calling functions all clearly declare these three
+variables as local and contain a comment that they will be set by this function.
+
 If we are working from a single argument (ignore args starting with `--`)
 Strip path and extension from template
 Deduce params filename from stack and template names
